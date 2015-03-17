@@ -1106,6 +1106,7 @@ extern unsigned int __machine_arch_type;
 #define MACH_TYPE_OMAP5_SEVM           3777
 #define MACH_TYPE_ARMADILLO_800EVA     3863
 #define MACH_TYPE_KZM9G                4140
+#define MACH_TYPE_ELITE1000            6064
 
 #ifdef CONFIG_ARCH_EBSA110
 # ifdef machine_arch_type
@@ -14234,6 +14235,19 @@ extern unsigned int __machine_arch_type;
 #else
 # define machine_is_kzm9g()	(0)
 #endif
+
+#ifdef CONFIG_MACH_ELITE1000
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type     __machine_arch_type
+# else
+#  define machine_arch_type     MACH_TYPE_ELITE1000
+# endif
+# define machine_is_elite1000()  (machine_arch_type == MACH_TYPE_ELITE1000)
+#else
+# define machine_is_elite1000()  (0)
+#endif
+
 
 /*
  * These have not yet been registered

@@ -399,7 +399,7 @@ static int mmc_read_blocks(struct mmc *mmc, void *dst, lbaint_t start,
 	if (blkcnt > 1) {
 		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
 		cmd.cmdarg = 0;
-		cmd.resp_type = MMC_RSP_R1b;
+		cmd.resp_type = MMC_RSP_R1b;	//R1 for read case,R1b for write case for emmc
 		if (mmc_send_cmd(mmc, &cmd, NULL)) {
 			printf("mmc fail to send stop cmd\n");
 			return 0;

@@ -209,6 +209,7 @@ struct usb_bus_instance;
 #define USB_DT_STRING			0x03
 #define USB_DT_INTERFACE		0x04
 #define USB_DT_ENDPOINT			0x05
+#define	USB_DT_SS_ENDPOINT_COMP		0x30
 
 #if defined(CONFIG_USBD_HS)
 #define USB_DT_QUAL			0x06
@@ -607,7 +608,8 @@ struct usb_device_instance {
 	/* Shouldn't need to make this atomic, all we need is a change indicator */
 	unsigned long usbd_rxtx_timestamp;
 	unsigned long usbd_last_rxtx_timestamp;
-
+	
+	unsigned int speed;
 };
 
 /* Bus Interface configuration structure

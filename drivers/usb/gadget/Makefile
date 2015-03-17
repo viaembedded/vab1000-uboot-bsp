@@ -54,6 +54,8 @@ COBJS-$(CONFIG_OMAP1510) += omap1510_udc.o
 COBJS-$(CONFIG_OMAP1610) += omap1510_udc.o
 COBJS-$(CONFIG_MPC885_FAMILY) += mpc8xx_udc.o
 COBJS-$(CONFIG_CPU_PXA27X) += pxa27x_udc.o
+COBJS-$(CONFIG_ELITE1000_UDC) += elite-udc.o
+COBJS-$(CONFIG_ELITE_UDC) += vu3l_lib.o vu3d_trace.o vu3d_ep.o vu3d_udc.o e2k_udc.o
 endif
 endif
 

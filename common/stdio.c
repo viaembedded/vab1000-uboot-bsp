@@ -68,6 +68,13 @@ int nulldev_input(void)
  **************************************************************************
  */
 
+//elite1k-320118d-YSW-08 start
+#ifdef CONFIG_CMD_DISPLAY
+void video_puts(char *string);	
+void video_putc(char ch);	
+#endif
+//elite1k-320118d-YSW-08 end
+
 static void drv_system_init (void)
 {
 	struct stdio_dev dev;
@@ -76,8 +83,15 @@ static void drv_system_init (void)
 
 	strcpy (dev.name, "serial");
 	dev.flags = DEV_FLAGS_OUTPUT | DEV_FLAGS_INPUT | DEV_FLAGS_SYSTEM;
+//elite1k-320118d-YSW-08 start
+#ifdef CONFIG_CMD_DISPLAY
+	dev.putc = video_putc;  
+	dev.puts = video_puts;  
+#else 
+//elite1k-320118d-YSW-08 end
 	dev.putc = serial_putc;
 	dev.puts = serial_puts;
+#endif //elite1k-320118d-YSW-08 
 	dev.getc = serial_getc;
 	dev.tstc = serial_tstc;
 	stdio_register (&dev);

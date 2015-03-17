@@ -717,7 +717,24 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 				ret = mtd_write_oob(nand, off, &ops);
 		} else if (raw) {
 			ret = raw_access(nand, addr, off, pagecount, read);
-		} else {
+		} 
+		#if defined(CONFIG_MTD_NAND_YAFFS2)
+		else if(s != NULL && !strcmp(s, ".yaffs2") ) {
+			if (read) {
+				printf("nand read.yaffs[1] is not provide temporarily!\n"); 
+			}
+			else {
+				
+				printf("nand write.yaffs[1] enter here!\n"); 
+				nand->rw_oob = 1;
+				nand->skipfirstblk = 1;
+				ret = nand_write_skip_bad(nand,off,&size,NULL,0,(u_char *)addr,0);
+				nand->skipfirstblk = 0;
+				nand->rw_oob = 0;
+			}
+		}
+		#endif
+		else {
 			printf("Unknown nand command suffix '%s'.\n", s);
 			return 1;
 		}
@@ -877,6 +894,11 @@ static char nand_help_text[] =
 	"    first device.\n"
 	"nand env.oob set off|partition - set enviromnent offset\n"
 	"nand env.oob get - get environment offset"
+#endif
+#if defined(CONFIG_MTD_NAND_YAFFS2)
+	"\n"
+	 "nand write[.yaffs2] - addr off|partition size - write `size' byte yaffs image\n"
+	 "     starting at offset off' from memory address addr' (.yaffs2 for 512+16 NAND)\n"
 #endif
 	"";
 #endif

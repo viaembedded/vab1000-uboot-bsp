@@ -1,0 +1,265 @@
+;============================================================================
+;
+;		Platform Configuration Data (PCD)
+;
+;============================================================================
+
+;============================================================================
+;		Format of entries:
+
+;"<Description of data entry>" <CONST> <BOOL/BYTE/WORD/DWORD/STRING> 
+;                       <Number of Data Entries>
+;CONST : tells BIOSEDIT that the data is read only and should not be 
+;                       modified.
+;BOOL : this is a BOOLEAN data and the user will be able to toggle between 
+;                       "YES" and "NO" in BIOSEDIT
+;BYTE : this is BYTE data.
+;WORD : this is WORD data.
+;DWORD : this is DOUBLE WORD data.
+;STRING : this is STRING data and the string length is defined by 
+;                       <Number of Data Entries>.
+;<Number of Data Entries> : Number of data entires used to store the data.
+;
+;
+;
+;SKIP <Number of byte entries to skip before reading the next set of data>
+
+;
+;Checksum for Binary.  
+;This must be the last "Checksum" entry or checksum will FAIL!!!
+;
+Checksum        0       EFFF
+StartAddr
+
+;============================================================================
+;		These are the pages and descriptions
+PageStruct
+     "VCP Version"                           VCPVersion
+     "Supported Display Devices"             SupportDevices
+     "Supported_DVO_Device"                  Supported_DVO_Device
+     "Boot Device Priority"                  BootDev_Opt
+     "PCI SubSystem ID"                      SubSystemID
+     "Chip Clock"                            ChipClock
+     "Features Switch"                       FEA_SWITCH
+     "Port characteristics Config"           PORT_CHAR_CONFIG
+     "Boot CRTC Registers"                   Boot_CR
+     "Boot Sequencer Registers"              Boot_SR
+     "Panel Type"                            Panel_ID
+     "Panel Tables"                          Panel_TABLES
+     "Panel With EDID Config"                Panal_With_EDID_Config_TABLES
+     "SSC Enable & Mode"                     VCP_SSCMode
+     "Prebuid CBios Version"                 VCP_PrebuidCBiosVersion 
+EndPage                         
+
+;============================================================================
+;		VCP Version (VCP_BiosVersion)
+;
+BeginStruct     VCPVersion
+     "VCP Version"                   DWORD  
+EndStruct
+
+;============================================================================
+;		Supported Display Devices (VCP_SupportDevices)
+;
+BeginStruct     SupportDevices
+     "CRT1"          BOOL
+     "Internal LCD"  BOOL
+     "TV"            BOOL
+     "HDTV"          BOOL
+     "Reserved"      BOOL
+     "DVO"           BOOL
+     "Reserved"      BOOL
+     "Reserved"      BOOL
+     "Reserved"      BOOL
+     "DP6"           BOOL
+     "Reserved"      BOOL
+     "Reserved"      BOOL
+     "Reserved"      BOOL
+     "Reserved"      BOOL
+     "Reserved"      BOOL
+     "DP5"           BOOL
+EndStruct
+
+;============================================================================
+;		Supported DVO Devices (VCP_SupportedDVODeviceType)
+;
+BeginStruct     Supported_DVO_Device
+     "AD9389B"        CONST BOOL
+     "VT1632A"        CONST BOOL
+     "VT1636"         CONST BOOL
+     "VT1625"         CONST BOOL
+     "CH7301C"        CONST BOOL
+     "CH7305"         CONST BOOL
+     "ADV7511"        CONST BOOL
+EndStruct
+
+;============================================================================
+;		Boot Device Priority (VCP_BootDevPriority)
+;
+BeginStruct     BootDev_Opt
+     "Priority 1  ActDisp"             DWORD
+     "Priority 2  ActDisp"             DWORD
+     "Priority 3  ActDisp"             DWORD
+     "Priority 4  ActDisp"             DWORD
+     "Priority 5  ActDisp"             DWORD
+     "Priority 6  ActDisp"             DWORD
+     "Priority 7  ActDisp"             DWORD
+     "Priority 8  ActDisp"             DWORD
+     "Priority 9  ActDisp"             DWORD
+     "Priority 10 ActDisp"             DWORD
+EndStruct
+
+;============================================================================
+;		PCI SubSystem ID (VCP_SubVendorID)
+;
+BeginStruct     SubSystemID
+     "Sub-System Vendor ID"       DWORD
+     "Sub-System ID"              DWORD
+EndStruct
+
+;============================================================================
+;		Video Chip Clocks (VCP_ChipClock)
+;
+BeginStruct     ChipClock
+     "ECLK (engine clock)"            DEC    DWORD
+     "ECLK_VCO"                       DEC    DWORD
+     "DCLK_VCO"                       DEC    DWORD
+EndStruct
+
+;============================================================================
+;		Features Switch (VCP_FeatureSwitch)
+;
+BeginStruct     FEA_SWITCH
+     "Configure Internal LVDS By EDID"     BOOL
+     "Configure External LVDS By EDID"     BOOL
+EndStruct
+
+;============================================================================
+;               Port characteristics Config(VCP_PortConfig)
+;
+BeginStruct	PORT_CHAR_CONFIG
+    " Bit[3:0]: I2C port#(0xF means invalid), Bit[7:4]: reserved" BYTE 0
+    " DAC_Char_Byte "            DWORD   1
+	" LVDS_Char_Byte"            DWORD   1
+	" DVO_Char_Byte "            DWORD   1
+	" DP1_Char_Byte "            DWORD   1
+	" DP2_Char_Byte "            DWORD   1
+    " DSI_Char_Byte "            DWORD   1
+	" Bit[3:0]: GPIO pin#(0xF means invalid), Bit[7:4]: reserved" BYTE 0
+	" DAC_GPIO_BYTE "            DWORD   1
+	" LVDS_GPIO_BYTE "           DWORD   1
+	" DVO_GPIO_BYTE "            DWORD   1
+	" DP1_GPIO_BYTE "            DWORD   1
+	" DP2_GPIO_BYTE "            DWORD   1
+    " DSI_GPIO_BYTE "            DWORD   1
+EndStruct
+
+;============================================================================
+;		Boot CRTC Registers (VCP_CR_DEFAULT_TABLE)
+;
+BeginStruct	    Boot_CR
+EndStruct
+
+
+;============================================================================
+;		Boot Sequencer Registers (VCP_SR_DEFAULT_TABLE)
+;
+BeginStruct     Boot_SR
+EndStruct        
+
+;============================================================================
+;		Panel Type (VCP_PanelID)
+;
+BeginStruct     Panel_ID
+     "Selected Panel Type"     DWORD
+EndStruct
+
+;============================================================================
+;		Panel Tables (VCP_PanelTypeTable)
+;
+BeginStruct     Panel_TABLES
+
+EndStruct 
+
+;============================================================================
+;			Panel Table
+;============================================================================
+BeginTable      Panel_Table
+     "HortSize"                       DEC DWORD   1
+     "VertSize"                       DEC DWORD   1
+     "PanelChar"                      BYTE        0
+     "Dual Channel"                   BOOL        1
+     "24 Bit Pannel"                  BOOL        1
+     "Enable Dither"                  BOOL        1
+     "MSB Color Mapping"              BOOL        1
+     "SKIP"                                       7
+     "Min Off to On Wait time (ms)"   DEC DWORD   1
+     "Default SSC range"              DEC DWORD   1
+     "Panel EDID detailed timing"     BYTE        0
+     "Pixel clock / 10,000"           DEC DWORD   1
+     "SKIP"                                       4
+     "Horizontal Active"              DWORD       1
+     "Horizontal Blanking"            DWORD       1
+     "Horizontal Active/Blanking"     DWORD       1
+     "Vertical Active"                DWORD       1
+     "Vertical Blanking"              DWORD       1
+     "Vertical Active/Blanking"       DWORD       1
+     "Horizontal Sync Offset"         DWORD       1
+     "Horizontal Sync Pulse Width"    DWORD       1
+     "Vertical Sync Offset/Width"     DWORD       1
+     "H/V Sync Offset/width"          DWORD       1
+     "Horizontal Image Size"          DWORD       1
+     "Vertical Image Size"            DWORD       1
+     "H/V Image Size"                 DWORD       1
+     "Horizontal Border"              DWORD       1
+     "Vertical Border"                DWORD       1
+     "Flags"                          DWORD       1
+     "Panel Power Sequence (ms)"      BYTE        0
+     "VDD High To Data Active"        DEC DWORD    1
+     "Data Active To VEE High"        DEC DWORD    1
+     "VEE Low To Data Inactive"       DEC DWORD    1
+     "Data Inactive To VDD Low"       DEC DWORD    1
+EndTable
+
+;============================================================================
+;			Config Tables (VCP_PanelWithEDIDConfigTable)
+;
+BeginStruct Panal_With_EDID_Config_TABLES
+     "Internal_Lcd_With_EDID_Config"  TABLE   Panel_With_EDID_Config_Table
+     "External_Lcd_With_EDID_Config"  TABLE   Panel_With_EDID_Config_Table
+EndStruct 
+
+;============================================================================
+;			Panel With EDID Config Table
+;============================================================================
+BeginTable      Panel_With_EDID_Config_Table
+     "PanelChar"                      BYTE       0
+     "Dual Channel"                   BOOL       1
+     "24 Bit Pannel"                  BOOL       1
+     "Enable Dither"                  BOOL       1
+
+     "MSB Color Mapping"              BOOL       1
+     "SKIP"                                      7
+     "Min Off to On Wait time (ms)"   DEC DWORD   1
+     "Panel Power Sequence (ms)"      BYTE       0
+     "VDD High To Data Active"        DEC DWORD   1
+     "Data Active To VEE High"        DEC DWORD   1
+     "VEE Low To Data Inactive"       DEC DWORD   1
+     "Data Inactive To VDD Low"       DEC DWORD   1  
+EndTable
+
+============================================================================
+;		SSC Enable & Mode (VCP_SSCMode)
+;
+BeginStruct     VCP_SSCMode
+     "SSC Enable"              BOOL
+     "LCD1SSCMode"             BYTE
+     "LCD2SSCMode"             BYTE
+EndStruct
+
+============================================================================
+;		Prebuid CBios Version (VCP_PrebuidCBiosVersion)
+;
+BeginStruct     VCP_PrebuidCBiosVersion
+     "Prebuild CBios Version"              DWORD
+EndStruct

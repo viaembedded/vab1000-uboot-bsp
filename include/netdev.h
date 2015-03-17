@@ -90,6 +90,7 @@ int plb2800_eth_initialize(bd_t *bis);
 int ppc_4xx_eth_initialize (bd_t *bis);
 int rtl8139_initialize(bd_t *bis);
 int rtl8169_initialize(bd_t *bis);
+int rtl8168_initialize(bd_t *bis);
 int scc_initialize(bd_t *bis);
 int sh_eth_initialize(bd_t *bis);
 int skge_initialize(bd_t *bis);
@@ -153,6 +154,11 @@ static inline int pci_eth_init(bd_t *bis)
 #endif
 #if defined(CONFIG_ULI526X)
 	num += uli526x_initialize(bis);
+#endif
+
+#if defined(CONFIG_RTL8168) && defined(CONFIG_ELITE_PCIE)
+	if(!rtl8168_initialize(bis))
+		num++;
 #endif
 
 #endif  /* CONFIG_PCI */
