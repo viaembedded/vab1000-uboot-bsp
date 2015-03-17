@@ -80,6 +80,13 @@
 #define USB_DIR_OUT           0
 #define USB_DIR_IN            0x80
 
+/* USB device speeds */
+#define USB_SPEED_LOW	      0x1	/* 1.5Mbps */
+#define USB_SPEED_FULL	      0x2	/* 12Mbps */
+#define USB_SPEED_HIGH	      0x3	/* 480Mbps */
+#define USB_SPEED_RESERVED    0x4
+#define USB_SPEED_SUPER	      0x5	/* 5Gbps */
+
 /* Descriptor types */
 #define USB_DT_DEVICE        0x01
 #define USB_DT_CONFIG        0x02

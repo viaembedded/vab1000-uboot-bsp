@@ -30,6 +30,11 @@ enum dma_data_direction {
 	DMA_FROM_DEVICE		= 2,
 };
 
+#if defined(CONFIG_SYS_DMA_ALLOC_LEN)
+void *dma_alloc_coherent(size_t len, unsigned long *handle);
+unsigned long dma_map_single(volatile void *vaddr, size_t len,
+					   enum dma_data_direction dir);
+#else
 static void *dma_alloc_coherent(size_t len, unsigned long *handle)
 {
 	*handle = (unsigned long)malloc(len);
@@ -41,6 +46,7 @@ static inline unsigned long dma_map_single(volatile void *vaddr, size_t len,
 {
 	return (unsigned long)vaddr;
 }
+#endif
 
 static inline void dma_unmap_single(volatile void *vaddr, size_t len,
 				    unsigned long paddr)

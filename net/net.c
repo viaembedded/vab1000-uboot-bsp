@@ -497,7 +497,7 @@ restart:
 		 */
 		if (timeHandler && ((get_timer(0) - timeStart) > timeDelta)) {
 			thand_f *x;
-
+			
 #if defined(CONFIG_MII) || defined(CONFIG_CMD_MII)
 #if	defined(CONFIG_SYS_FAULT_ECHO_LINK_DOWN)	&& \
 	defined(CONFIG_STATUS_LED)			&& \
@@ -675,10 +675,10 @@ NetSetTimeout(ulong iv, thand_f *f)
 		timeHandler = (thand_f *)0;
 	} else {
 		debug_cond(DEBUG_INT_STATE,
-			"--- NetLoop timeout handler set (%p)\n", f);
+			"--- NetLoop timeout handler set (%p) timeout %x %x\n", f, iv, CONFIG_SYS_HZ);
 		timeHandler = f;
 		timeStart = get_timer(0);
-		timeDelta = iv * CONFIG_SYS_HZ / 1000;
+		timeDelta = iv * (CONFIG_SYS_HZ / 1000);
 	}
 }
 

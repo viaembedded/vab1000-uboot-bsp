@@ -2058,15 +2058,88 @@ static int nand_write(struct mtd_info *mtd, loff_t to, size_t len,
 	struct nand_chip *chip = mtd->priv;
 	struct mtd_oob_ops ops;
 	int ret;
+	
+	#if defined(CONFIG_MTD_NAND_YAFFS2)
+	/*Thanks for hugerat's code!*/
+	int oldopsmode = 0;
+	uint8_t * data_buffer=NULL;
+	uint8_t * oob_buffer=NULL;  
+	int datapages = 0;
+	if(mtd->rw_oob==1)    
+	{
+		int i = 0;
+		size_t oobsize = mtd->oobsize;
+		size_t datasize = mtd->writesize;
+		
+		uint8_t oobtemp[oobsize];
+		uint8_t * tmp_data_buffer=NULL;
+		uint8_t * tmp_oob_buffer=NULL;  
+		datapages = len / (datasize);
 
+		 data_buffer=malloc(datapages*datasize);
+	 	oob_buffer=malloc(datapages* oobsize); 
+
+		if((data_buffer==NULL)||(oob_buffer==NULL))
+		{
+		   printf("yaffs2 malloc out of memory!\n");
+		   return -ENOMEM;
+		}
+		tmp_data_buffer=data_buffer;
+		tmp_oob_buffer=oob_buffer;  
+		for(i = 0; i < (datapages); i++)    
+		{
+			memcpy(tmp_data_buffer, (void *)(buf + (datasize +oobsize)* i), datasize);
+			tmp_data_buffer +=datasize;
+			memcpy(tmp_oob_buffer, (void *)(buf + datasize * (i+1)+oobsize* i), oobsize);
+			tmp_oob_buffer +=oobsize;
+		}
+	}
+	#endif 
+	
 	nand_get_device(chip, mtd, FL_WRITING);
+	
+	#if defined(CONFIG_MTD_NAND_YAFFS2)
+	/*Thanks for hugerat's code!*/
+	if(mtd->rw_oob!=1) {
+		ops.len = len;
+		ops.ooboffs=0;
+		ops.datbuf = (uint8_t *)buf;
+		ops.oobbuf = NULL;
+		ops.mode = MTD_OPS_PLACE_OOB; 
+	} else {
+	     
+		ops.len = len;
+		ops.ooboffs=0;
+		ops.datbuf = (uint8_t *)data_buffer;
+		ops.oobbuf = oob_buffer; 
+		ops.ooblen = mtd->oobsize*datapages;
+		oldopsmode = ops.mode;
+		ops.mode = MTD_OPS_PLACE_OOB; 
+	}
+	#else
 	ops.len = len;
 	ops.datbuf = (uint8_t *)buf;
 	ops.oobbuf = NULL;
 	ops.mode = MTD_OPS_PLACE_OOB;
+    #endif
 	ret = nand_do_write_ops(mtd, to, &ops);
 	*retlen = ops.retlen;
 	nand_release_device(mtd);
+	
+	#if defined(CONFIG_MTD_NAND_YAFFS2)//add yaffs2 file system support
+	/*Thanks for hugerat's code!*/
+	ops.mode = oldopsmode; 
+	if(data_buffer)
+	{
+		free(data_buffer);
+	}
+	if(oob_buffer)
+	{
+		free(oob_buffer);
+	}
+	data_buffer=oob_buffer=NULL;
+	#endif
+	
 	return ret;
 }
 
@@ -2962,6 +3035,16 @@ static const struct nand_flash_dev *nand_get_flash_type(struct mtd_info *mtd,
 	}
 	/* Get chip options, preserve non chip based options */
 	chip->options |= type->options;
+	if (type->id == 0xD5)
+	{
+		mtd->oobsize = 218;
+		busw = 0;	
+	}
+	else if ((type->id == 0x68)||(type->id == 0x48))
+	{
+		mtd->oobsize = 218;
+		busw = 0;	
+	}
 
 	/*
 	 * Check if chip is not a Samsung device. Do not clear the

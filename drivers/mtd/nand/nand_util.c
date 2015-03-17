@@ -484,6 +484,155 @@ static size_t drop_ffs(const nand_info_t *nand, const u_char *buf,
 #endif
 
 /**
+ * get_len_incl_bad
+ *
+ * Check if length including bad blocks fits into device.
+ *
+ * @param nand NAND device
+ * @param offset offset in flash
+ * @param length image length
+ * @return image length including bad blocks
+ */
+static size_t get_len_incl_bad (nand_info_t *nand, loff_t offset,
+				const size_t length)
+{
+	size_t len_incl_bad = 0;
+	size_t len_excl_bad = 0;
+	size_t block_len;
+
+	while (len_excl_bad < length) {
+		block_len = nand->erasesize - (offset & (nand->erasesize - 1));
+
+		if (!nand_block_isbad (nand, offset & ~(nand->erasesize - 1)))
+			len_excl_bad += block_len;
+
+		len_incl_bad += block_len;
+		offset       += block_len;
+
+		if (offset >= nand->size)
+			break;
+	}
+
+	return len_incl_bad;
+}
+
+/**
+ * nand_write_skip_bad:
+ *
+ * Write image to NAND flash.
+ * Blocks that are marked bad are skipped and the is written to the next
+ * block instead as long as the image is short enough to fit even after
+ * skipping the bad blocks.
+ *
+ * @param nand  	NAND device
+ * @param offset	offset in flash
+ * @param length	buffer length, on return holds number of bytes written
+ * @param buffer        buffer to read from
+ * @param flags		flags modifying the behaviour of the write to NAND
+ * @return		0 in case of success
+ */
+int nand_write_skip_bad_yaffs2(nand_info_t *nand, loff_t offset, size_t *length,u_char *buffer)
+{
+	int rval;
+	size_t left_to_write = *length;
+	size_t len_incl_bad;
+	u_char *p_buffer = buffer;
+	#if defined(CONFIG_MTD_NAND_YAFFS2)
+	if(nand->rw_oob==1)
+	{
+		size_t oobsize = nand->oobsize;
+		size_t datasize = nand->writesize;
+		int datapages = 0;
+
+		if (((*length)%(nand->oobsize+nand->writesize)) != 0)
+		{
+			printf ("Attempt to write error length data!\n");
+			return -EINVAL;
+		}
+		datapages = *length/(datasize+oobsize);
+		*length = datapages*datasize;
+		left_to_write = *length;
+	}
+	#endif
+	/* Reject writes, which are not page aligned */
+	if ((offset & (nand->writesize - 1)) != 0 ||
+	    (*length & (nand->writesize - 1)) != 0) {
+		printf ("Attempt to write non page aligned data\n");
+		return -EINVAL;
+	}
+	len_incl_bad = get_len_incl_bad (nand, offset, *length);
+
+	if ((offset + len_incl_bad) > nand->size) {
+		printf ("Attempt to write outside the flash area\n");
+		return -EINVAL;
+	}
+	#if !defined(CONFIG_MTD_NAND_YAFFS2)//add yaffs2 file system support
+	if (len_incl_bad == *length) {
+		rval = nand_write (nand, offset, length, buffer);
+		if (rval != 0)
+		printf ("NAND write to offset %llx failed %d\n",
+		offset, rval);
+		return rval;
+	}
+	#endif
+
+	while (left_to_write > 0) {
+		size_t block_offset = offset & (nand->erasesize - 1);
+		size_t write_size;
+		WATCHDOG_RESET ();
+
+		if (nand_block_isbad (nand, offset & ~(nand->erasesize - 1))) {
+			printf ("Skip bad block 0x%08llx\n",
+				offset & ~(nand->erasesize - 1));
+			offset += nand->erasesize - block_offset;
+			continue;
+		}
+		#if defined(CONFIG_MTD_NAND_YAFFS2) //add yaffs2 file system support
+		if(nand->skipfirstblk==1)
+		{
+			nand->skipfirstblk=0;
+			printf ("Skip the first good block %llx\n", offset & ~(nand->erasesize - 1));
+			offset += nand->erasesize - block_offset;
+			continue;
+		}
+		#endif
+
+		if (left_to_write < (nand->erasesize - block_offset))
+			write_size = left_to_write;
+		else
+			write_size = nand->erasesize - block_offset;
+			
+  		printf("\rWriting at 0x%llx -- ",offset); //add yaffs2 file system support
+
+		rval = nand_write (nand, offset, &write_size, p_buffer);
+		if (rval != 0) {
+			printf ("NAND write to offset %llx failed %d\n",offset, rval);
+			*length -= left_to_write;
+			return rval;
+		}
+
+		left_to_write -= write_size;
+		printf("%d%% is complete.",100-(left_to_write/(*length/100)));/*Thanks for hugerat's code*/
+		offset        += write_size;
+
+		#if defined(CONFIG_MTD_NAND_YAFFS2)
+		/*Thanks for hugerat's code*/
+		if(nand->rw_oob==1) {
+			p_buffer += write_size+(write_size/nand->writesize*nand->oobsize);
+		} else {
+			p_buffer += write_size;
+		}
+		#else 
+		p_buffer      += write_size;
+		#endif
+
+	}
+
+	return 0;
+}
+
+
+/**
  * nand_write_skip_bad:
  *
  * Write image to NAND flash.
@@ -518,7 +667,9 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 
 	if (actual)
 		*actual = 0;
-
+	#ifdef CONFIG_MTD_NAND_YAFFS2
+		return   nand_write_skip_bad_yaffs2(nand, offset, length,buffer);
+	#endif 
 #ifdef CONFIG_CMD_NAND_YAFFS
 	if (flags & WITH_YAFFS_OOB) {
 		if (flags & ~WITH_YAFFS_OOB)

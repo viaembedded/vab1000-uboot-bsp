@@ -21,10 +21,15 @@
 # MA 02111-1307 USA
 #
 
-VERSION = 2013
-PATCHLEVEL = 07
-SUBLEVEL =
-EXTRAVERSION =
+VERSION ?=32
+PATCHLEVEL ?=01
+#;elite1k-320118d-YSW-04  SUBLEVEL ?=00
+#;elite1k-320118d-YSW-04 - start
+SUBLEVEL ?= 02a
+#;elite1k-320118d-YSW-04 - end
+EXTRAVERSION ?=-elite1000
+HDMIIN ?= 0
+
 ifneq "$(SUBLEVEL)" ""
 U_BOOT_VERSION = $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
 else
@@ -330,7 +335,9 @@ LIBS-y += drivers/usb/musb/libusb_musb.o
 LIBS-y += drivers/usb/musb-new/libusb_musb-new.o
 LIBS-y += drivers/usb/phy/libusb_phy.o
 LIBS-y += drivers/usb/ulpi/libusb_ulpi.o
+LIBS-y += drivers/security/libsecurity.o
 LIBS-y += drivers/video/libvideo.o
+LIBS-y += drivers/video/cbios/libcbios.o
 LIBS-y += drivers/watchdog/libwatchdog.o
 LIBS-y += common/libcommon.o
 LIBS-y += lib/libfdt/libfdt.o
@@ -770,6 +777,12 @@ $(TIMESTAMP_FILE):
 		@LC_ALL=C date +'#define U_BOOT_DATE "%b %d %C%y"' > $@.tmp
 		@LC_ALL=C date +'#define U_BOOT_TIME "%T"' >> $@.tmp
 		@cmp -s $@ $@.tmp && rm -f $@.tmp || mv -f $@.tmp $@
+ifeq ($(CONFIG_FASTBOOT),y)
+		@eval `date +'BYR=%Y BMON=%-m BDOM=%-d BHR=%-H BMIN=%-M'`; \
+			chr () { printf \\$$(($$1/64*100+$$1%64/8*10+$$1%8)); }; \
+			b36 () { if [ $$1 -le 9 ]; then echo $$1; else chr $$((0x41 + $$1 - 10)); fi }; \
+			printf '#define FASTBOOT_TIMESTAMP "%c%c%c%c%c"\n' `chr $$((0x41 + $$BYR - 2011))` `b36 $$BMON` `b36 $$BDOM` `b36 $$BHR` `b36 $$(($$BMIN/2))` >> $@
+endif
 
 easylogo env gdb:
 	$(MAKE) -C tools/$@ all MTD_VERSION=${MTD_VERSION}
@@ -875,6 +888,7 @@ clobber:	tidy
 	@rm -f $(obj)u-boot.sb
 	@rm -f $(obj)u-boot.bd
 	@rm -f $(obj)u-boot.spr
+	@rm -f $(obj)u-boot.vcd
 	@rm -f $(obj)nand_spl/{u-boot.{lds,lst},System.map}
 	@rm -f $(obj)nand_spl/{u-boot-nand_spl.lds,u-boot-spl,u-boot-spl.map}
 	@rm -f $(obj)spl/{u-boot-spl,u-boot-spl.bin,u-boot-spl.map}

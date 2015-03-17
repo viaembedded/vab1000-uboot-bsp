@@ -24,6 +24,8 @@
 #define _PART_H
 
 #include <ide.h>
+#include <errno.h>
+#include <jffs2/load_kernel.h>
 
 typedef struct block_dev_desc {
 	int		if_type;	/* type of the interface */
@@ -74,6 +76,10 @@ typedef struct block_dev_desc {
 #define IF_TYPE_MMC		6
 #define IF_TYPE_SD		7
 #define IF_TYPE_SATA		8
+#define IF_TYPE_MTD		0x100
+#define IF_TYPE_MTD_NOR		(IF_TYPE_MTD | MTD_DEV_TYPE_NOR)
+#define IF_TYPE_MTD_NAND	(IF_TYPE_MTD | MTD_DEV_TYPE_NAND)
+#define IF_TYPE_MTD_ONENAND	(IF_TYPE_MTD | MTD_DEV_TYPE_ONENAND)
 
 /* Part types */
 #define PART_TYPE_UNKNOWN	0x00
@@ -82,6 +88,7 @@ typedef struct block_dev_desc {
 #define PART_TYPE_ISO		0x03
 #define PART_TYPE_AMIGA		0x04
 #define PART_TYPE_EFI		0x05
+#define PART_TYPE_MTD		0x06
 
 /*
  * Type string for U-Boot bootable partitions
@@ -118,8 +125,38 @@ block_dev_desc_t* usb_stor_get_dev(int dev);
 block_dev_desc_t* mmc_get_dev(int dev);
 block_dev_desc_t* systemace_get_dev(int dev);
 block_dev_desc_t* mg_disk_get_dev(int dev);
+block_dev_desc_t *nand_get_dev(int dev);
 
 /* disk/part.c */
+/* Refer to doc/README.partition_funcs for information about these functions. */
+int get_partition_by_name(block_dev_desc_t *dev, const char *partition_name,
+				disk_partition_t *partition);
+int partition_erase_pre(disk_partition_t *ptn);
+int partition_erase_post(disk_partition_t *ptn);
+int partition_read_pre(disk_partition_t *ptn);
+int partition_read_post(disk_partition_t *ptn);
+int partition_write_pre(disk_partition_t *ptn);
+int partition_write_post(disk_partition_t *ptn);
+int partition_erase_blks(block_dev_desc_t *dev, disk_partition_t *partition,
+				lbaint_t *blkcnt);
+int partition_erase_bytes(block_dev_desc_t *dev, disk_partition_t *partition,
+				loff_t *bytecnt);
+#ifdef CONFIG_MD5
+void partition_md5_helper(block_dev_desc_t *dev, lbaint_t blk_start,
+				lbaint_t *blkcnt, unsigned char md5[16]);
+int partition_md5_blks(block_dev_desc_t *dev, disk_partition_t *partition,
+				lbaint_t *blkcnt, unsigned char md5[16]);
+int partition_md5_bytes(block_dev_desc_t *dev, disk_partition_t *partition,
+				loff_t *bytecnt, unsigned char md5[16]);
+#endif /* CONFIG_MD5 */
+int partition_read_blks(block_dev_desc_t *dev, disk_partition_t *partition,
+				lbaint_t *blkcnt, void *buffer);
+int partition_read_bytes(block_dev_desc_t *dev, disk_partition_t *partition,
+				loff_t *bytecnt, void *buffer);
+int partition_write_blks(block_dev_desc_t *dev, disk_partition_t *partition,
+				lbaint_t *blkcnt, const void *buffer);
+int partition_write_bytes(block_dev_desc_t *dev, disk_partition_t *partition,
+				loff_t *bytecnt, const void *buffer);
 int get_partition_info (block_dev_desc_t * dev_desc, int part, disk_partition_t *info);
 void print_part (block_dev_desc_t *dev_desc);
 void  init_part (block_dev_desc_t *dev_desc);
@@ -129,7 +166,14 @@ int get_device(const char *ifname, const char *dev_str,
 int get_device_and_partition(const char *ifname, const char *dev_part_str,
 			     block_dev_desc_t **dev_desc,
 			     disk_partition_t *info, int allow_whole_dev);
-#else
+#ifndef CONFIG_MIN_PARTITION_NUM
+#define CONFIG_MIN_PARTITION_NUM 0
+#endif
+#ifndef CONFIG_MAX_PARTITION_NUM
+#define CONFIG_MAX_PARTITION_NUM 16
+#endif
+
+#else /* CONFIG_PARTITIONS */
 static inline block_dev_desc_t *get_dev(const char *ifname, int dev)
 { return NULL; }
 static inline block_dev_desc_t* ide_get_dev(int dev) { return NULL; }
@@ -139,6 +183,51 @@ static inline block_dev_desc_t* usb_stor_get_dev(int dev) { return NULL; }
 static inline block_dev_desc_t* mmc_get_dev(int dev) { return NULL; }
 static inline block_dev_desc_t* systemace_get_dev(int dev) { return NULL; }
 static inline block_dev_desc_t* mg_disk_get_dev(int dev) { return NULL; }
+static inline block_dev_desc_t *nand_get_dev(int dev) { return NULL; }
+static inline int get_partition_by_name(block_dev_desc_t *dev,
+				const char *partition_name,
+				disk_partition_t *partition) { return -ENODEV; }
+static inline int partition_erase_pre(disk_partition_t *ptn)
+							{ return -ENODEV; }
+static inline int partition_erase_post(disk_partition_t *ptn)
+							{ return -ENODEV; }
+static inline int partition_read_pre(disk_partition_t *ptn)
+							{ return -ENODEV; }
+static inline int partition_read_post(disk_partition_t *ptn)
+							{ return -ENODEV; }
+static inline int partition_write_pre(disk_partition_t *ptn)
+							{ return -ENODEV; }
+static inline int partition_write_post(disk_partition_t *ptn)
+							{ return -ENODEV; }
+static inline int partition_erase_blks(block_dev_desc_t *dev,
+				disk_partition_t *partition,
+				lbaint_t *blkcnt) { return -ENODEV; }
+static inline int partition_erase_bytes(block_dev_desc_t *dev,
+				disk_partition_t *partition,
+				loff_t *bytecnt) { return -ENODEV; }
+#ifdef CONFIG_MD5
+static inline void partition_md5_helper(block_dev_desc_t *dev,
+				lbaint_t blk_start, lbaint_t *blkcnt,
+				unsigned char md5[16]) { *blkcnt = 0; }
+static inline int partition_md5_blks(block_dev_desc_t *dev,
+				disk_partition_t *partition, lbaint_t *blkcnt,
+				unsigned char md5[16]) { return -ENODEV; }
+static inline int partition_md5_bytes(block_dev_desc_t *dev,
+				disk_partition_t *partition, loff_t *bytecnt,
+				unsigned char md5[16]) { return -ENODEV; }
+#endif /* CONFIG_MD5 */
+static inline int partition_read_blks(block_dev_desc_t *dev,
+				disk_partition_t *partition, lbaint_t *blkcnt,
+				void *buffer) { return -ENODEV; }
+static inline int partition_read_bytes(block_dev_desc_t *dev,
+				disk_partition_t *partition, loff_t *bytecnt,
+				void *buffer) { return -ENODEV; }
+static inline int partition_write_blks(block_dev_desc_t *dev,
+				disk_partition_t *partition, lbaint_t *blkcnt,
+				const void *buffer) { return -ENODEV; }
+static inline int partition_write_bytes(block_dev_desc_t *dev,
+				disk_partition_t *partition, loff_t *bytecnt,
+				const void *buffer) { return -ENODEV; }
 
 static inline int get_partition_info (block_dev_desc_t * dev_desc, int part,
 	disk_partition_t *info) { return -1; }
@@ -154,7 +243,14 @@ static inline int get_device_and_partition(const char *ifname,
 					   disk_partition_t *info,
 					   int allow_whole_dev)
 { *dev_desc = NULL; return -1; }
+#ifndef CONFIG_MIN_PARTITION_NUM
+#define CONFIG_MIN_PARTITION_NUM 0
 #endif
+#ifndef CONFIG_MAX_PARTITION_NUM
+#define CONFIG_MAX_PARTITION_NUM 0
+#endif
+
+#endif /* CONFIG_PARTITIONS */
 
 #ifdef CONFIG_MAC_PARTITION
 /* disk/part_mac.c */
@@ -241,6 +337,14 @@ int gpt_fill_header(block_dev_desc_t *dev_desc, gpt_header *gpt_h,
  */
 int gpt_restore(block_dev_desc_t *dev_desc, char *str_disk_guid,
 		disk_partition_t *partitions, const int parts_count);
+#endif
+
+#ifdef CONFIG_CMD_MTDPARTS
+/* common/cmd_mtdparts.c */
+int get_partition_info_mtd(block_dev_desc_t *dev_desc, int part,
+						disk_partition_t *info);
+void print_part_mtd(block_dev_desc_t *dev_desc);
+int   test_part_mtd(block_dev_desc_t *dev_desc);
 #endif
 
 #endif /* _PART_H */

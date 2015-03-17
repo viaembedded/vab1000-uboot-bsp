@@ -191,6 +191,14 @@
 /*
  * standard usb descriptor structures
  */
+struct usb_ss_ep_comp_descriptor {
+	__u8  bLength;
+	__u8  bDescriptorType;
+
+	__u8  bMaxBurst;
+	__u8  bmAttributes;
+	__le16 wBytesPerInterval;
+} __attribute__ ((packed));
 
 struct usb_endpoint_descriptor {
 	u8 bLength;

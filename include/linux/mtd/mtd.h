@@ -215,6 +215,10 @@ struct mtd_info {
 
 	struct module *owner;
 	int usecount;
+#if defined(CONFIG_MTD_NAND_YAFFS2)
+	u_char rw_oob;
+	u_char skipfirstblk;
+#endif
 };
 
 int mtd_erase(struct mtd_info *mtd, struct erase_info *instr);

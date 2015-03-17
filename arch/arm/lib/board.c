@@ -595,6 +595,10 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	nand_init();		/* go init the NAND */
 #endif
 
+#if defined(CONFIG_VIDEO_LOGO)
+	board_show_bootlogo();
+#endif
+
 #if defined(CONFIG_CMD_ONENAND)
 	onenand_init();
 #endif
